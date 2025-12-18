@@ -19,6 +19,20 @@ CPPFLAGS ?= @CPPFLAGS@
 LDFLAGS ?= @LDFLAGS@
 
 multilib := @MULTILIB@
+define has_csr
+$(if $(findstring _zicsr,$(1)),$(1),\
+$(if $(findstring g,$(1)),$(1),\
+$(if $(findstring f,$(1)),$(1),\
+$(if $(findstring zicntr,$(1)),$(1),\
+$(if $(findstring zihpm,$(1)),$(1),))))
+)
+endef
+
+supported_multilib :=
+$(foreach ml,$(multilib),$(eval supported_multilib += $(call has_csr,$(ml))))
+
+$(info Supported multilibs: $(supported_multilib))
+
 
 libgloss_c_srcs := \
 	misc/traps.c \
@@ -134,7 +148,7 @@ $(call libgloss,$(1),_$(arch)_$(abi),-march=$(arch) -mabi=$(abi))
 endef
 
 $(eval $(call libgloss))
-$(foreach subdir,$(multilib),$(eval $(call libgloss_multilib,$(subdir))))
+$(foreach subdir,$(supported_multilib),$(eval $(call libgloss_multilib,$(subdir))))
 
 .PHONY: libgloss
 libgloss: $(libgloss_libs)
